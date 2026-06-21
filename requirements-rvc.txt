@@ -1,0 +1,22 @@
+# =====================================================================
+#  OPTIONAL: RVC voice-conversion stage
+#  Install AFTER requirements.txt. The app works without this; installing
+#  it flips RVC from "not installed" to "ready" automatically.
+#
+#  This machine has an AMD GPU (no CUDA), so we use the CPU build of torch.
+#
+#  Recommended install (run from the project root):
+#    python -m pip install -r requirements-rvc.txt
+#
+#  If `fairseq` fails to build on Python 3.11/Windows (a known headache),
+#  the simplest fix is a Python 3.10 venv:
+#    py -3.10 -m venv .venv310
+#    .venv310\Scripts\activate
+#    pip install -r requirements.txt -r requirements-rvc.txt
+# =====================================================================
+
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.1.2
+torchaudio==2.1.2
+
+rvc-python

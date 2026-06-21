@@ -1,0 +1,10 @@
+# --- Core app (lightweight, installs fast) ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+edge-tts>=7.2.8
+python-multipart==0.0.20
+aiofiles==24.1.0
+
+# --- RVC voice-conversion stage (heavy; installed separately) ---
+# See requirements-rvc.txt and backend/engines/rvc_engine.py
+# The app runs fully without these; RVC just stays "unavailable" until installed.

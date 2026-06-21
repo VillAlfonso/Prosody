@@ -1,0 +1,8 @@
+{
+  "voice": "en-US-AriaNeural",
+  "rvc_enabled": false,
+  "active_model": null,
+  "output_format": "mp3",
+  "default_emotion": "neutral",
+  "rvc_device": "cpu:0"
+}

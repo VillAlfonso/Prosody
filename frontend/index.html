@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prosody · TTS Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="glow glow--a" aria-hidden="true"></div>
+  <div class="glow glow--b" aria-hidden="true"></div>
+
+  <!-- ====================== HEADER ====================== -->
+  <header class="topbar reveal" style="--d:0">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 24" width="40" height="20">
+          <polyline class="wave" points="0,12 4,12 7,4 10,20 13,8 16,16 19,2 22,22 25,10 28,14 31,6 34,18 37,11 40,12 48,12" />
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>PROSODY</h1>
+        <span>prosody-driven tts studio · rvc</span>
+      </div>
+    </div>
+
+    <div class="topbar-controls">
+      <label class="field field--inline">
+        <span class="field-label">Voice</span>
+        <select id="voice-select" class="select"></select>
+      </label>
+      <label class="field field--inline">
+        <span class="field-label">Format</span>
+        <select id="format-select" class="select select--sm">
+          <option value="mp3">MP3</option>
+          <option value="wav">WAV</option>
+        </select>
+      </label>
+      <button id="rvc-toggle" class="rvc-toggle" type="button" aria-pressed="false">
+        <span class="rvc-dot" id="rvc-status-dot"></span>
+        <span class="rvc-label">RVC</span>
+        <span class="switch"><span class="switch-knob"></span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ====================== WORKSPACE ====================== -->
+  <main class="workspace">
+
+    <!-- ----- LEFT: emotion channel strips ----- -->
+    <aside class="rail reveal" style="--d:1">
+      <div class="rail-head">
+        <h2 class="panel-title">Emotions</h2>
+        <button id="new-emotion-btn" class="btn btn--ghost btn--sm" type="button">+ New</button>
+      </div>
+      <p class="rail-hint">Click a strip to drop its tag into the script. Double-click to edit in the Lab.</p>
+      <div id="emotion-list" class="emotion-list"></div>
+    </aside>
+
+    <!-- ----- CENTER: script editor + render ----- -->
+    <section class="stage reveal" style="--d:2">
+      <div class="stage-head">
+        <h2 class="panel-title">Script</h2>
+        <div class="stage-head-meta">
+          <span id="unknown-warn" class="warn-pill" hidden></span>
+          <span class="counter" id="char-count">0 chars</span>
+        </div>
+      </div>
+
+      <div class="chip-bar" id="chip-bar"></div>
+
+      <div class="editor" id="editor">
+        <div class="editor-backdrop" id="backdrop"><div class="highlights" id="highlights"></div></div>
+        <textarea id="script" class="editor-input" spellcheck="false"
+          placeholder="[Gleeful] Hi there, welcome to my channel!&#10;[Calm] Today we are going to take it nice and slow.&#10;&#10;Untagged text uses your default emotion."></textarea>
+      </div>
+
+      <div class="render-bar">
+        <button id="generate-btn" class="btn btn--primary btn--lg" type="button">
+          <span class="btn-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span class="btn-text">Generate</span>
+        </button>
+        <div class="render-info">
+          <span id="gen-status" class="gen-status">Ready.</span>
+        </div>
+      </div>
+
+      <div class="player-card" id="player-card" hidden>
+        <div class="timeline" id="timeline"></div>
+        <div class="player-row">
+          <audio id="player" controls preload="metadata"></audio>
+          <a id="download-link" class="btn btn--ghost btn--sm" download href="#">Download</a>
+        </div>
+        <div class="seg-legend" id="seg-legend"></div>
+      </div>
+    </section>
+
+    <!-- ----- RIGHT: inspector (Lab / Models / Config) ----- -->
+    <aside class="inspector reveal" style="--d:3">
+      <div class="tabs" role="tablist">
+        <button class="tab is-active" data-tab="lab" role="tab">Prosody Lab</button>
+        <button class="tab" data-tab="models" role="tab">Models</button>
+        <button class="tab" data-tab="config" role="tab">Config</button>
+      </div>
+
+      <!-- ===== LAB ===== -->
+      <div class="tab-panel is-active" id="tab-lab" role="tabpanel">
+        <div class="lab-id">
+          <span class="lab-editing-label">Editing</span>
+          <span id="lab-editing" class="lab-editing">New emotion</span>
+        </div>
+
+        <div class="lab-grid">
+          <label class="field">
+            <span class="field-label">Name</span>
+            <input id="lab-name" class="input" type="text" placeholder="e.g. Gleeful" />
+          </label>
+          <label class="field field--color">
+            <span class="field-label">Color</span>
+            <input id="lab-color" class="color-input" type="color" value="#7c8cff" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field-label">Description</span>
+          <input id="lab-desc" class="input" type="text" placeholder="Short note about this emotion" />
+        </label>
+
+        <label class="field">
+          <span class="field-label">Sample text <em>(for preview)</em></span>
+          <textarea id="lab-sample" class="input input--area" rows="2"
+            placeholder="Type a line to hear this emotion..."></textarea>
+        </label>
+
+        <!-- Base voice faders -->
+        <div class="fader-group">
+          <div class="group-head"><span class="group-dot"></span> Base voice · Edge-TTS</div>
+          <div class="faders">
+            <div class="fader" data-fmt="pct">
+              <div class="fader-head"><label>Speed</label><output class="fader-val" id="v-rate">+0%</output></div>
+              <input id="f-rate" type="range" min="-80" max="120" step="1" value="0" />
+              <div class="fader-scale"><span>slow</span><span>fast</span></div>
+            </div>
+            <div class="fader" data-fmt="hz">
+              <div class="fader-head"><label>Pitch</label><output class="fader-val" id="v-pitch">+0Hz</output></div>
+              <input id="f-pitch" type="range" min="-100" max="100" step="1" value="0" />
+              <div class="fader-scale"><span>low</span><span>high</span></div>
+            </div>
+            <div class="fader" data-fmt="pct">
+              <div class="fader-head"><label>Volume</label><output class="fader-val" id="v-volume">+0%</output></div>
+              <input id="f-volume" type="range" min="-80" max="80" step="1" value="0" />
+              <div class="fader-scale"><span>soft</span><span>loud</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RVC faders -->
+        <div class="fader-group" id="rvc-fader-group">
+          <div class="group-head"><span class="group-dot group-dot--rvc"></span> Voice conversion · RVC
+            <span class="group-badge" id="rvc-group-badge">inactive</span>
+          </div>
+          <div class="faders">
+            <div class="fader" data-fmt="semi">
+              <div class="fader-head"><label>Voice pitch</label><output class="fader-val" id="v-transpose">0 st</output></div>
+              <input id="f-transpose" type="range" min="-24" max="24" step="1" value="0" />
+              <div class="fader-scale"><span>−24</span><span>+24</span></div>
+            </div>
+            <div class="fader" data-fmt="num">
+              <div class="fader-head"><label>Timbre <em>(index)</em></label><output class="fader-val" id="v-index">0.66</output></div>
+              <input id="f-index" type="range" min="0" max="1" step="0.01" value="0.66" />
+              <div class="fader-scale"><span>0</span><span>1</span></div>
+            </div>
+            <div class="fader" data-fmt="num">
+              <div class="fader-head"><label>Consonant protect</label><output class="fader-val" id="v-protect">0.33</output></div>
+              <input id="f-protect" type="range" min="0" max="0.5" step="0.01" value="0.33" />
+              <div class="fader-scale"><span>0</span><span>0.5</span></div>
+            </div>
+            <div class="fader" data-fmt="num">
+              <div class="fader-head"><label>Volume envelope</label><output class="fader-val" id="v-rms">0.25</output></div>
+              <input id="f-rms" type="range" min="0" max="1" step="0.01" value="0.25" />
+              <div class="fader-scale"><span>0</span><span>1</span></div>
+            </div>
+            <div class="fader-row">
+              <div class="fader" data-fmt="int">
+                <div class="fader-head"><label>Smoothing</label><output class="fader-val" id="v-filter">3</output></div>
+                <input id="f-filter" type="range" min="0" max="7" step="1" value="3" />
+                <div class="fader-scale"><span>0</span><span>7</span></div>
+              </div>
+              <label class="field field--method">
+                <span class="field-label">F0 method</span>
+                <select id="f-method" class="select select--sm">
+                  <option value="rmvpe">rmvpe</option>
+                  <option value="harvest">harvest</option>
+                  <option value="crepe">crepe</option>
+                  <option value="pm">pm</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="lab-extra">
+          <label class="field field--inline">
+            <span class="field-label">Pause after (ms)</span>
+            <input id="lab-pause" class="input input--num" type="number" min="0" max="4000" step="50" value="0" />
+          </label>
+          <label class="check">
+            <input id="lab-default" type="checkbox" />
+            <span>Default (untagged text)</span>
+          </label>
+        </div>
+
+        <div class="lab-actions">
+          <button id="lab-preview" class="btn btn--ghost" type="button">
+            <span class="btn-text">▶ Preview</span>
+          </button>
+          <button id="lab-save" class="btn btn--primary" type="button">Save emotion</button>
+        </div>
+        <div class="lab-actions lab-actions--minor">
+          <button id="lab-new" class="btn btn--ghost btn--sm" type="button">Clear</button>
+          <button id="lab-delete" class="btn btn--danger btn--sm" type="button">Delete</button>
+        </div>
+        <audio id="lab-player" class="lab-player" controls preload="none" hidden></audio>
+        <p class="lab-msg" id="lab-msg"></p>
+      </div>
+
+      <!-- ===== MODELS ===== -->
+      <div class="tab-panel" id="tab-models" role="tabpanel">
+        <div class="rvc-banner" id="rvc-banner">
+          <span class="rvc-badge" id="rvc-badge">checking…</span>
+          <span class="rvc-device" id="rvc-device"></span>
+        </div>
+        <p class="rvc-note" id="rvc-note"></p>
+
+        <label class="dropzone" id="model-drop" for="model-file">
+          <input id="model-file" type="file" accept=".pth,.index" multiple hidden />
+          <div class="dropzone-inner">
+            <strong>Drop your RVC model here</strong>
+            <span>or click to browse · <code>.pth</code> + <code>.index</code></span>
+          </div>
+        </label>
+
+        <h3 class="sub-title">Installed models</h3>
+        <div id="model-list" class="model-list"></div>
+      </div>
+
+      <!-- ===== CONFIG ===== -->
+      <div class="tab-panel" id="tab-config" role="tabpanel">
+        <p class="config-intro">Edit emotion colors or the full configuration as JSON. The
+          <code>data/</code> files are the source of truth.</p>
+        <label class="field field--inline">
+          <span class="field-label">Mode</span>
+          <select id="config-mode" class="select select--sm">
+            <option value="colors">Colors map</option>
+            <option value="full">Full config (emotions + settings)</option>
+          </select>
+        </label>
+        <textarea id="config-text" class="input input--code" spellcheck="false" rows="16"></textarea>
+        <div class="config-actions">
+          <button id="config-load" class="btn btn--ghost btn--sm" type="button">Reload</button>
+          <button id="config-apply" class="btn btn--primary btn--sm" type="button">Apply</button>
+        </div>
+        <p class="config-msg" id="config-msg"></p>
+      </div>
+    </aside>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

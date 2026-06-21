@@ -1,0 +1,156 @@
+[
+  {
+    "id": "neutral",
+    "name": "Neutral",
+    "color": "#8b93a7",
+    "description": "Calm, even narration. Used for untagged text.",
+    "sample_text": "This is my normal speaking voice.",
+    "pause_after_ms": 0,
+    "is_default": true,
+    "tts": {
+      "rate": 0,
+      "pitch": 0,
+      "volume": 0
+    },
+    "rvc": {
+      "transpose": 0,
+      "index_rate": 0.66,
+      "protect": 0.33,
+      "rms_mix_rate": 0.25,
+      "filter_radius": 3,
+      "f0method": "rmvpe"
+    }
+  },
+  {
+    "id": "gleeful",
+    "name": "Gleeful",
+    "color": "#ffd166",
+    "description": "Bright, upbeat and smiling.",
+    "sample_text": "Hi there, welcome to my channel!",
+    "pause_after_ms": 0,
+    "is_default": false,
+    "tts": {
+      "rate": 12,
+      "pitch": 28,
+      "volume": 6
+    },
+    "rvc": {
+      "transpose": 1,
+      "index_rate": 0.7,
+      "protect": 0.33,
+      "rms_mix_rate": 0.35,
+      "filter_radius": 3,
+      "f0method": "rmvpe"
+    }
+  },
+  {
+    "id": "excited",
+    "name": "Excited",
+    "color": "#ff7b54",
+    "description": "High energy, fast and loud.",
+    "sample_text": "You are NOT going to believe what happened today!",
+    "pause_after_ms": 0,
+    "is_default": false,
+    "tts": {
+      "rate": 24,
+      "pitch": 40,
+      "volume": 12
+    },
+    "rvc": {
+      "transpose": 2,
+      "index_rate": 0.72,
+      "protect": 0.33,
+      "rms_mix_rate": 0.45,
+      "filter_radius": 3,
+      "f0method": "rmvpe"
+    }
+  },
+  {
+    "id": "sad",
+    "name": "Sad",
+    "color": "#5b8def",
+    "description": "Slow, low and downcast.",
+    "sample_text": "But today, I have some difficult news to share.",
+    "pause_after_ms": 0,
+    "is_default": false,
+    "tts": {
+      "rate": -16,
+      "pitch": -30,
+      "volume": -6
+    },
+    "rvc": {
+      "transpose": -1,
+      "index_rate": 0.6,
+      "protect": 0.33,
+      "rms_mix_rate": 0.15,
+      "filter_radius": 3,
+      "f0method": "rmvpe"
+    }
+  },
+  {
+    "id": "angry",
+    "name": "Angry",
+    "color": "#ef476f",
+    "description": "Hard, intense and forceful.",
+    "sample_text": "I have had absolutely enough of this.",
+    "pause_after_ms": 0,
+    "is_default": false,
+    "tts": {
+      "rate": 8,
+      "pitch": -8,
+      "volume": 14
+    },
+    "rvc": {
+      "transpose": 0,
+      "index_rate": 0.75,
+      "protect": 0.2,
+      "rms_mix_rate": 0.5,
+      "filter_radius": 3,
+      "f0method": "rmvpe"
+    }
+  },
+  {
+    "id": "whisper",
+    "name": "Whisper",
+    "color": "#9b8cff",
+    "description": "Soft, intimate, breathy and quiet.",
+    "sample_text": "Come closer... I want to tell you a secret.",
+    "pause_after_ms": 0,
+    "is_default": false,
+    "tts": {
+      "rate": -12,
+      "pitch": -6,
+      "volume": -40
+    },
+    "rvc": {
+      "transpose": 0,
+      "index_rate": 0.5,
+      "protect": 0.45,
+      "rms_mix_rate": 0.05,
+      "filter_radius": 3,
+      "f0method": "rmvpe"
+    }
+  },
+  {
+    "id": "calm",
+    "name": "Calm",
+    "color": "#06d6a0",
+    "description": "Relaxed, warm and reassuring.",
+    "sample_text": "Take a deep breath. Everything is going to be alright.",
+    "pause_after_ms": 0,
+    "is_default": false,
+    "tts": {
+      "rate": -8,
+      "pitch": 4,
+      "volume": -2
+    },
+    "rvc": {
+      "transpose": 0,
+      "index_rate": 0.66,
+      "protect": 0.33,
+      "rms_mix_rate": 0.2,
+      "filter_radius": 3,
+      "f0method": "rmvpe"
+    }
+  }
+]
