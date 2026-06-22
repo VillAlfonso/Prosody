@@ -39,7 +39,7 @@ class Segment:
             "known": self.known,
             "char_start": self.char_start,
             "char_end": self.char_end,
-            "tts": self.emotion.tts.model_dump(),
+            "prosody": self.emotion.prosody.model_dump(),
             "rvc": self.emotion.rvc.model_dump(),
             "pause_after_ms": self.emotion.pause_after_ms,
         }

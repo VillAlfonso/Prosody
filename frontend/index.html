@@ -136,39 +136,39 @@
             placeholder="Type a line to hear this emotion..."></textarea>
         </label>
 
-        <!-- Base voice faders -->
+        <!-- Delivery (prosody) faders -->
         <div class="fader-group">
-          <div class="group-head"><span class="group-dot"></span> Base voice · Edge-TTS</div>
+          <div class="group-head"><span class="group-dot"></span> Delivery · prosody</div>
           <div class="faders">
             <div class="fader" data-fmt="pct">
-              <div class="fader-head"><label>Speed</label><output class="fader-val" id="v-rate">+0%</output></div>
-              <input id="f-rate" type="range" min="-80" max="120" step="1" value="0" />
-              <div class="fader-scale"><span>slow</span><span>fast</span></div>
-            </div>
-            <div class="fader" data-fmt="hz">
-              <div class="fader-head"><label>Pitch</label><output class="fader-val" id="v-pitch">+0Hz</output></div>
-              <input id="f-pitch" type="range" min="-100" max="100" step="1" value="0" />
-              <div class="fader-scale"><span>low</span><span>high</span></div>
+              <div class="fader-head"><label>Pace</label><output class="fader-val" id="v-rate">+0%</output></div>
+              <input id="f-rate" type="range" min="-50" max="50" step="1" value="0" />
+              <div class="fader-scale"><span>slower</span><span>faster</span></div>
             </div>
             <div class="fader" data-fmt="pct">
-              <div class="fader-head"><label>Volume</label><output class="fader-val" id="v-volume">+0%</output></div>
-              <input id="f-volume" type="range" min="-80" max="80" step="1" value="0" />
+              <div class="fader-head"><label>Energy</label><output class="fader-val" id="v-volume">+0%</output></div>
+              <input id="f-volume" type="range" min="-50" max="50" step="1" value="0" />
               <div class="fader-scale"><span>soft</span><span>loud</span></div>
+            </div>
+            <div class="fader" data-fmt="semi">
+              <div class="fader-head"><label>Pitch <em>(formant-safe)</em></label><output class="fader-val" id="v-pitch">0.0 st</output></div>
+              <input id="f-pitch" type="range" min="-6" max="6" step="0.5" value="0" />
+              <div class="fader-scale"><span>lower</span><span>higher</span></div>
+            </div>
+            <div class="fader" data-fmt="mult">
+              <div class="fader-head"><label>Expressiveness <em>(vocal range)</em></label><output class="fader-val" id="v-range">1.00×</output></div>
+              <input id="f-range" type="range" min="0.3" max="1.8" step="0.05" value="1" />
+              <div class="fader-scale"><span>flat</span><span>lively</span></div>
             </div>
           </div>
         </div>
 
         <!-- RVC faders -->
         <div class="fader-group" id="rvc-fader-group">
-          <div class="group-head"><span class="group-dot group-dot--rvc"></span> Voice conversion · RVC
+          <div class="group-head"><span class="group-dot group-dot--rvc"></span> Voice conversion · RVC <em>(timbre)</em>
             <span class="group-badge" id="rvc-group-badge">inactive</span>
           </div>
           <div class="faders">
-            <div class="fader" data-fmt="semi">
-              <div class="fader-head"><label>Voice pitch</label><output class="fader-val" id="v-transpose">0 st</output></div>
-              <input id="f-transpose" type="range" min="-24" max="24" step="1" value="0" />
-              <div class="fader-scale"><span>−24</span><span>+24</span></div>
-            </div>
             <div class="fader" data-fmt="num">
               <div class="fader-head"><label>Timbre <em>(index)</em></label><output class="fader-val" id="v-index">0.66</output></div>
               <input id="f-index" type="range" min="0" max="1" step="0.01" value="0.66" />
@@ -235,6 +235,19 @@
           <span class="rvc-device" id="rvc-device"></span>
         </div>
         <p class="rvc-note" id="rvc-note"></p>
+
+        <div class="global-pitch fader" data-fmt="semi">
+          <div class="fader-head">
+            <label>Voice pitch <em>(global calibration)</em></label>
+            <output class="fader-val" id="v-gtranspose">+0 st</output>
+          </div>
+          <input id="f-gtranspose" type="range" min="-12" max="12" step="1" value="0" />
+          <div class="fader-scale"><span>lower</span><span>higher</span></div>
+          <p class="hint-sm">One global shift applied during RVC conversion to match your
+            model's natural register (e.g. a male model speaking a female base voice).
+            This is <strong>not</strong> per-emotion — emotion pitch is formant-safe and
+            lives in the Prosody Lab.</p>
+        </div>
 
         <label class="dropzone" id="model-drop" for="model-file">
           <input id="model-file" type="file" accept=".pth,.index" multiple hidden />

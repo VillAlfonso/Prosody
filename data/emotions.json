@@ -3,17 +3,17 @@
     "id": "neutral",
     "name": "Neutral",
     "color": "#8b93a7",
-    "description": "Calm, even narration. Used for untagged text.",
+    "description": "Even, natural narration. Used for untagged text.",
     "sample_text": "This is my normal speaking voice.",
     "pause_after_ms": 0,
     "is_default": true,
-    "tts": {
+    "prosody": {
       "rate": 0,
-      "pitch": 0,
-      "volume": 0
+      "volume": 0,
+      "pitch": 0.0,
+      "range": 1.0
     },
     "rvc": {
-      "transpose": 0,
       "index_rate": 0.66,
       "protect": 0.33,
       "rms_mix_rate": 0.25,
@@ -25,20 +25,20 @@
     "id": "gleeful",
     "name": "Gleeful",
     "color": "#ffd166",
-    "description": "Bright, upbeat and smiling.",
+    "description": "Bright and smiling - livelier melody, a touch quicker.",
     "sample_text": "Hi there, welcome to my channel!",
     "pause_after_ms": 0,
     "is_default": false,
-    "tts": {
-      "rate": 12,
-      "pitch": 28,
-      "volume": 6
+    "prosody": {
+      "rate": 6,
+      "volume": 3,
+      "pitch": 1.0,
+      "range": 1.35
     },
     "rvc": {
-      "transpose": 1,
-      "index_rate": 0.7,
+      "index_rate": 0.66,
       "protect": 0.33,
-      "rms_mix_rate": 0.35,
+      "rms_mix_rate": 0.25,
       "filter_radius": 3,
       "f0method": "rmvpe"
     }
@@ -47,20 +47,20 @@
     "id": "excited",
     "name": "Excited",
     "color": "#ff7b54",
-    "description": "High energy, fast and loud.",
-    "sample_text": "You are NOT going to believe what happened today!",
+    "description": "High energy - fast, loud, very animated intonation.",
+    "sample_text": "You are not going to believe what happened today!",
     "pause_after_ms": 0,
     "is_default": false,
-    "tts": {
-      "rate": 24,
-      "pitch": 40,
-      "volume": 12
+    "prosody": {
+      "rate": 16,
+      "volume": 8,
+      "pitch": 1.5,
+      "range": 1.6
     },
     "rvc": {
-      "transpose": 2,
-      "index_rate": 0.72,
+      "index_rate": 0.66,
       "protect": 0.33,
-      "rms_mix_rate": 0.45,
+      "rms_mix_rate": 0.25,
       "filter_radius": 3,
       "f0method": "rmvpe"
     }
@@ -69,20 +69,20 @@
     "id": "sad",
     "name": "Sad",
     "color": "#5b8def",
-    "description": "Slow, low and downcast.",
+    "description": "Slow and subdued - flatter, downcast melody.",
     "sample_text": "But today, I have some difficult news to share.",
     "pause_after_ms": 0,
     "is_default": false,
-    "tts": {
-      "rate": -16,
-      "pitch": -30,
-      "volume": -6
+    "prosody": {
+      "rate": -14,
+      "volume": -4,
+      "pitch": -1.0,
+      "range": 0.6
     },
     "rvc": {
-      "transpose": -1,
-      "index_rate": 0.6,
+      "index_rate": 0.66,
       "protect": 0.33,
-      "rms_mix_rate": 0.15,
+      "rms_mix_rate": 0.25,
       "filter_radius": 3,
       "f0method": "rmvpe"
     }
@@ -91,42 +91,42 @@
     "id": "angry",
     "name": "Angry",
     "color": "#ef476f",
-    "description": "Hard, intense and forceful.",
+    "description": "Hard and forceful - driven by loudness and pace, not pitch.",
     "sample_text": "I have had absolutely enough of this.",
     "pause_after_ms": 0,
     "is_default": false,
-    "tts": {
-      "rate": 8,
-      "pitch": -8,
-      "volume": 14
+    "prosody": {
+      "rate": 6,
+      "volume": 10,
+      "pitch": 0.0,
+      "range": 1.15
     },
     "rvc": {
-      "transpose": 0,
-      "index_rate": 0.75,
+      "index_rate": 0.66,
       "protect": 0.2,
-      "rms_mix_rate": 0.5,
+      "rms_mix_rate": 0.25,
       "filter_radius": 3,
       "f0method": "rmvpe"
     }
   },
   {
-    "id": "whisper",
-    "name": "Whisper",
+    "id": "hushed",
+    "name": "Hushed",
     "color": "#9b8cff",
-    "description": "Soft, intimate, breathy and quiet.",
-    "sample_text": "Come closer... I want to tell you a secret.",
+    "description": "Soft and intimate - quiet, gentle, slower.",
+    "sample_text": "Come closer... I want to tell you something.",
     "pause_after_ms": 0,
     "is_default": false,
-    "tts": {
-      "rate": -12,
-      "pitch": -6,
-      "volume": -40
+    "prosody": {
+      "rate": -8,
+      "volume": -32,
+      "pitch": 0.0,
+      "range": 0.8
     },
     "rvc": {
-      "transpose": 0,
-      "index_rate": 0.5,
+      "index_rate": 0.66,
       "protect": 0.45,
-      "rms_mix_rate": 0.05,
+      "rms_mix_rate": 0.25,
       "filter_radius": 3,
       "f0method": "rmvpe"
     }
@@ -135,20 +135,42 @@
     "id": "calm",
     "name": "Calm",
     "color": "#06d6a0",
-    "description": "Relaxed, warm and reassuring.",
+    "description": "Relaxed and reassuring - gentle, even melody.",
     "sample_text": "Take a deep breath. Everything is going to be alright.",
     "pause_after_ms": 0,
     "is_default": false,
-    "tts": {
-      "rate": -8,
-      "pitch": 4,
-      "volume": -2
+    "prosody": {
+      "rate": -6,
+      "volume": -2,
+      "pitch": 0.0,
+      "range": 0.85
     },
     "rvc": {
-      "transpose": 0,
       "index_rate": 0.66,
       "protect": 0.33,
-      "rms_mix_rate": 0.2,
+      "rms_mix_rate": 0.25,
+      "filter_radius": 3,
+      "f0method": "rmvpe"
+    }
+  },
+  {
+    "id": "curious",
+    "name": "Curious",
+    "color": "#22d3ee",
+    "description": "Inquisitive lift - a little brighter and more varied.",
+    "sample_text": "Hmm, now that is a really interesting question.",
+    "pause_after_ms": 0,
+    "is_default": false,
+    "prosody": {
+      "rate": 2,
+      "volume": 1,
+      "pitch": 0.5,
+      "range": 1.3
+    },
+    "rvc": {
+      "index_rate": 0.66,
+      "protect": 0.33,
+      "rms_mix_rate": 0.25,
       "filter_radius": 3,
       "f0method": "rmvpe"
     }

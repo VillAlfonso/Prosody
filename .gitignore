@@ -1,0 +1,56 @@
+# ───────────────────────────────── Python ─────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments (.venv310 is the RVC-enabled Python 3.10 env)
+.venv/
+.venv310/
+venv/
+env/
+ENV/
+
+# ───────────────────────────── Prosody runtime data ───────────────────────
+# These dirs are re-created on startup by backend/config.py - never commit the
+# per-segment temp wavs, rendered audio, or uploaded model binaries.
+data/cache/
+data/output/
+data/models/
+
+# Uploaded RVC model files are large + user-supplied (normally under data/models).
+*.pth
+*.index
+*.onnx
+
+# Per-machine runtime state (selected voice, active model, etc). Regenerated
+# from Settings() defaults on first run. Emotion presets (data/emotions.json)
+# ARE tracked, since they're shareable JSON config.
+data/settings.json
+
+# ─────────────────────────── Dev scratch / artifacts ──────────────────────
+/scripts/ui_shot.png
+
+# ─────────────────────────────────── OS ───────────────────────────────────
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ───────────────────────────────── Editors ────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ─────────────────────────────────── Logs ─────────────────────────────────
+*.log

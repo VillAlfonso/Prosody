@@ -94,29 +94,35 @@ You can edit them by hand too; the UI reads them on next load.
 
 ---
 
-## 🔊 Enable RVC (optional)
+## 🔊 Enable RVC
 
-The app runs without RVC — it just uses the base voice and the **Models** tab shows
-*"RVC not installed."* To turn on real voice conversion:
+RVC is already installed on this machine in a Python 3.10 venv (`.venv310`), and
+`run.ps1` uses it automatically — the **Models** tab shows **"RVC ready."** (Without
+the venv the app still runs base-voice-only and shows *"RVC not installed."*)
+
+To rebuild or repair the RVC venv from scratch, **one command does everything**:
 
 ```powershell
-# from C:\Prosody  (CPU build — this machine has an AMD GPU, no CUDA)
-python -m pip install -r requirements-rvc.txt
-```
-Restart the server. The Models tab will flip to **"RVC ready."** Upload your `.pth`
-(+ `.index`), select it, toggle **RVC** on, and Generate.
-
-**If `fairseq` won't build on Python 3.11/Windows** (a common snag), use a 3.10 venv:
-```powershell
-py -3.10 -m venv .venv310
-.\.venv310\Scripts\activate
-pip install -r requirements.txt -r requirements-rvc.txt
-python -m uvicorn backend.app:app --host 127.0.0.1 --port 8765
+# from C:\Prosody  — builds .venv310 with the full app + RVC stack
+.\setup_rvc.ps1
 ```
 
-> Model files are pairs in `data/models/`: `myvoice.pth` + `myvoice.index`.
-> CPU conversion is functional but slower than a CUDA GPU — expect a few seconds per
-> segment. Per-emotion conversion settings come from the Prosody Lab faders.
+It requires **Python 3.10** and the **Visual C++ build tools** (VS 2022 "Desktop
+development with C++") — the real `fairseq` has no Windows wheels and must be
+compiled. The script handles every Windows gotcha automatically: 3.10 venv,
+`setuptools<81` (restores `pkg_resources`), the `One-sixth/fairseq` fork (0.12.3),
+MSVC env + `DISTUTILS_USE_SDK=1`, hiding AMD **ROCm** from PyTorch (its `hipcc` on
+PATH otherwise breaks the build), the privileged-symlink workaround, and
+`rvc-python --no-deps`.
+
+Then: `.\run.ps1` → **Models** tab → upload your `.pth` (+ `.index`) → select it →
+toggle **RVC** on (top bar) → **Generate**.
+
+> **First RVC generation downloads ~500 MB of base models** (HuBERT + RMVPE) — one
+> time, then cached inside the rvc-python package.
+> Models live in `data/models/`: `myvoice.pth` (+ optional `myvoice.index`).
+> This is an **AMD / CPU** box (no CUDA), so conversion runs on CPU: functional but a
+> few seconds per segment. Per-emotion conversion params come from the Lab faders.
 
 ---
 
@@ -126,7 +132,8 @@ python -m uvicorn backend.app:app --host 127.0.0.1 --port 8765
 |---|---|
 | `Synthesis failed: 403 … Invalid response status` | Edge-TTS is out of date — `pip install --upgrade edge-tts`, restart. |
 | No audio / network error | Edge-TTS needs internet; check your connection / firewall. |
-| RVC stays "not installed" | Run the RVC install above, then **restart** the server. |
+| RVC stays "not installed" | Run `.\setup_rvc.ps1`, then launch with `.\run.ps1` (it auto-uses `.venv310`). |
+| RVC build: `ROCm and Windows is not supported` | AMD ROCm's `hipcc` is on PATH; `run.ps1`/`setup_rvc.ps1` already strip it — use those, don't call uvicorn directly. |
 | `ffmpeg` errors | Ensure `ffmpeg` is on PATH or at `C:\ffmpeg\ffmpeg.exe`. |
 | Port 8765 in use | Edit the port in `run.ps1` / the uvicorn command. |
 

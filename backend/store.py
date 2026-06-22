@@ -109,10 +109,12 @@ def save_settings(settings: Settings) -> None:
 
 
 def update_settings(**changes) -> Settings:
+    """Partial update. Pass a key to change it; None is a valid value for
+    nullable fields (e.g. active_model=None clears the selected model)."""
     with _lock:
         s = load_settings()
         data = s.model_dump()
-        data.update({k: v for k, v in changes.items() if v is not None})
+        data.update(changes)
         s = Settings(**data)
         save_settings(s)
         return s

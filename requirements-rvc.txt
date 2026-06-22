@@ -1,22 +1,23 @@
 # =====================================================================
-#  OPTIONAL: RVC voice-conversion stage
-#  Install AFTER requirements.txt. The app works without this; installing
-#  it flips RVC from "not installed" to "ready" automatically.
+#  OPTIONAL: RVC voice-conversion stage  —  DO NOT `pip install` this file.
 #
-#  This machine has an AMD GPU (no CUDA), so we use the CPU build of torch.
+#  RVC on Windows can't be installed by plain pip: the real fairseq has no
+#  Windows wheels, rvc-python pins numpy<=1.23.5 (needs Python 3.10), and torch
+#  needs MSVC + several env tweaks to build the fairseq fork.
 #
-#  Recommended install (run from the project root):
-#    python -m pip install -r requirements-rvc.txt
+#  Instead run the automated installer from the project root:
 #
-#  If `fairseq` fails to build on Python 3.11/Windows (a known headache),
-#  the simplest fix is a Python 3.10 venv:
-#    py -3.10 -m venv .venv310
-#    .venv310\Scripts\activate
-#    pip install -r requirements.txt -r requirements-rvc.txt
+#      .\setup_rvc.ps1
+#
+#  It creates .venv310 and installs the exact working stack documented below.
+#  run.ps1 then uses .venv310 automatically. See README -> "Enable RVC".
 # =====================================================================
-
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.1.2
-torchaudio==2.1.2
-
-rvc-python
+#
+#  For reference, the stack setup_rvc.ps1 installs (Python 3.10 venv):
+#    setuptools<81                      # torch 2.1.2 still imports pkg_resources
+#    cython, numpy==1.23.5
+#    torch==2.1.2, torchaudio==2.1.2    # CPU build (AMD GPU, no CUDA)
+#    fairseq 0.12.3                     # github.com/One-sixth/fairseq (built w/ MSVC)
+#    faiss-cpu==1.7.3, praat-parselmouth, pyworld, torchcrepe, soundfile,
+#    av, ffmpeg-python, loguru
+#    rvc-python (installed --no-deps)

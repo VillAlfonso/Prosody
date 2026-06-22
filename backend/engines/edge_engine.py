@@ -10,7 +10,7 @@ from pathlib import Path
 
 import edge_tts
 
-from ..models import TTSParams
+from ..models import ProsodyParams
 
 # A curated short-list surfaced first in the UI; the full list comes from the API.
 FEATURED_VOICES = [
@@ -32,15 +32,21 @@ def _signed_hz(v: int) -> str:
     return f"{v:+d}Hz"
 
 
-async def synth(text: str, voice: str, tts: TTSParams, out_mp3: str | Path) -> Path:
-    """Synthesize `text` to an mp3 with the given voice + prosody."""
+async def synth(text: str, voice: str, prosody: ProsodyParams,
+                out_mp3: str | Path) -> Path:
+    """Synthesize `text` to an mp3 with the given voice, pace and energy.
+
+    Pitch and intonation range are deliberately NOT done here - Edge-TTS only
+    offers a crude global pitch shift (the old chipmunk/monster bug). Those are
+    applied afterwards, formant-preserving, in prosody_dsp.shape().
+    """
     out_mp3 = Path(out_mp3)
     communicate = edge_tts.Communicate(
         text,
         voice,
-        rate=_signed_pct(tts.rate),
-        volume=_signed_pct(tts.volume),
-        pitch=_signed_hz(tts.pitch),
+        rate=_signed_pct(prosody.rate),
+        volume=_signed_pct(prosody.volume),
+        pitch="+0Hz",
     )
     await communicate.save(str(out_mp3))
     if not out_mp3.exists() or out_mp3.stat().st_size == 0:

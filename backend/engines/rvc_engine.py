@@ -100,7 +100,7 @@ class _RVCManager:
             self._loaded_pth = str(pth)
 
     def convert(self, pth: Path, index: Path | None, src: Path, dst: Path,
-                params: RVCParams, device: str) -> Path:
+                params: RVCParams, transpose: int, device: str) -> Path:
         if not _IMPORT_OK:
             raise RVCUnavailable(
                 "RVC is not installed. See README -> 'Enable RVC'. "
@@ -110,7 +110,7 @@ class _RVCManager:
             self._ensure_engine(device)
             self._ensure_model(pth, index)
             self._infer.set_params(
-                f0up_key=params.transpose,
+                f0up_key=transpose,          # global voice-pitch calibration
                 index_rate=params.index_rate,
                 protect=params.protect,
                 rms_mix_rate=params.rms_mix_rate,
@@ -127,10 +127,10 @@ manager = _RVCManager()
 
 
 def convert(model_name: str, src: Path, dst: Path, params: RVCParams,
-            device: str = "cpu:0") -> Path:
+            transpose: int = 0, device: str = "cpu:0") -> Path:
     """Convert `src` -> `dst` using the named model. Raises RVCUnavailable."""
     resolved = resolve_model(model_name)
     if resolved is None:
         raise RVCUnavailable(f"Model '{model_name}' not found in data/models/.")
     pth, index = resolved
-    return manager.convert(pth, index, src, dst, params, device)
+    return manager.convert(pth, index, Path(src), Path(dst), params, transpose, device)

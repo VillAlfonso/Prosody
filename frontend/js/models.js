@@ -98,6 +98,46 @@ function initModels() {
   on("settings", renderModels);
 }
 
+// ---- global voice-pitch (RVC transpose) ------------------------------------
+
+let _gpitchTimer = null;
+
+function paintGPitch(input) {
+  const min = +input.min, max = +input.max, v = +input.value;
+  const pct = max > min ? ((v - min) / (max - min)) * 100 : 0;
+  input.style.setProperty("--fill", `${pct}%`);
+}
+
+function refreshGPitch() {
+  const input = $("f-gtranspose"), v = +input.value;
+  $("v-gtranspose").textContent = `${v > 0 ? "+" : ""}${v} st`;
+  paintGPitch(input);
+}
+
+function initGlobalPitch() {
+  const input = $("f-gtranspose");
+  if (!input) return;
+  input.value = state.settings.rvc_transpose ?? 0;
+  refreshGPitch();
+  input.addEventListener("input", refreshGPitch);
+  input.addEventListener("change", async () => {
+    const val = +input.value;
+    state.settings.rvc_transpose = val;
+    clearTimeout(_gpitchTimer);
+    try {
+      await api.saveSettings({ rvc_transpose: val });
+      emit("settings");
+      toast(`Voice pitch: ${val > 0 ? "+" : ""}${val} st`, "ok");
+    } catch (err) { toast(err.message, "err"); }
+  });
+  on("settings", () => {
+    if (document.activeElement !== input) {
+      input.value = state.settings.rvc_transpose ?? 0;
+      refreshGPitch();
+    }
+  });
+}
+
 // ---- voices ----------------------------------------------------------------
 
 function fillVoiceSelect(voices) {
@@ -190,6 +230,7 @@ function initConfig() {
 export function initModelsTab(featured) {
   renderModels();
   initModels();
+  initGlobalPitch();
   initVoices(featured);
   initConfig();
 }

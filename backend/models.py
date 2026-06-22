@@ -1,8 +1,14 @@
 """Pydantic data models + the seed preset emotions.
 
-An "emotion" bundles BOTH the base-TTS prosody (rate/pitch/volume that Edge-TTS
-understands) AND the RVC voice-conversion params (transpose, index rate, etc.).
-That single bundle is what an inline [Tag] in the editor refers to.
+An "emotion" is a *delivery* + a *voice-conversion* recipe:
+
+  prosody  -> how the line is performed (pace, energy, pitch inflection, and the
+              all-important intonation RANGE / expressiveness). Pitch & range are
+              applied with formant-preserving DSP (see prosody_dsp.py) so emotions
+              never sound like a chipmunk/monster - the speaker identity holds.
+  rvc      -> timbre controls for the optional voice conversion. The pitch of the
+              RVC voice is a SINGLE global calibration (Settings.rvc_transpose),
+              never per-emotion, so every block sounds like the same person.
 """
 from __future__ import annotations
 
@@ -19,16 +25,16 @@ def slugify(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", name.lower())
 
 
-class TTSParams(BaseModel):
-    """Maps directly onto Edge-TTS prosody controls."""
-    rate: int = Field(0, ge=-90, le=200)     # speaking speed, percent
-    pitch: int = Field(0, ge=-100, le=100)   # base pitch shift, Hz
-    volume: int = Field(0, ge=-90, le=100)   # loudness, percent
+class ProsodyParams(BaseModel):
+    """How the line is delivered. rate/volume = Edge-TTS; pitch/range = Praat DSP."""
+    rate: int = Field(0, ge=-60, le=60)        # pace, percent
+    volume: int = Field(0, ge=-60, le=60)      # energy, percent
+    pitch: float = Field(0.0, ge=-6.0, le=6.0) # median pitch, semitones (formant-safe)
+    range: float = Field(1.0, ge=0.3, le=1.8)  # intonation range / expressiveness
 
 
 class RVCParams(BaseModel):
-    """Maps onto rvc-python / RVC-WebUI inference params."""
-    transpose: int = Field(0, ge=-24, le=24)            # f0 key shift, semitones
+    """Timbre controls for voice conversion. (Pitch is global, see Settings.)"""
     index_rate: float = Field(0.66, ge=0.0, le=1.0)     # timbre/accent strength
     protect: float = Field(0.33, ge=0.0, le=0.5)        # protect voiceless consonants
     rms_mix_rate: float = Field(0.25, ge=0.0, le=1.0)   # volume-envelope follow
@@ -37,37 +43,37 @@ class RVCParams(BaseModel):
 
 
 class Emotion(BaseModel):
-    id: str                                   # slug, stable key used by tags
-    name: str                                 # display name shown in [Name]
-    color: str = "#7c8cff"                    # highlight color (#hex)
+    id: str
+    name: str
+    color: str = "#7c8cff"
     description: str = ""
     sample_text: str = "Hi there, welcome to my channel!"
-    pause_after_ms: int = Field(0, ge=0, le=4000)   # silence appended after segment
-    is_default: bool = False                  # the fallback used for untagged text
-    tts: TTSParams = Field(default_factory=TTSParams)
+    pause_after_ms: int = Field(0, ge=0, le=4000)
+    is_default: bool = False
+    prosody: ProsodyParams = Field(default_factory=ProsodyParams)
     rvc: RVCParams = Field(default_factory=RVCParams)
 
 
 class Settings(BaseModel):
     voice: str = "en-US-AriaNeural"
     rvc_enabled: bool = False
-    active_model: Optional[str] = None        # basename of selected .pth
+    active_model: Optional[str] = None
     output_format: Literal["mp3", "wav"] = "mp3"
-    default_emotion: str = "neutral"          # emotion id for untagged text
+    default_emotion: str = "neutral"
     rvc_device: str = "cpu:0"
+    rvc_transpose: int = Field(0, ge=-12, le=12)  # GLOBAL voice-pitch calibration
 
 
 # ---- API payload shapes ----------------------------------------------------
 
 class SynthRequest(BaseModel):
     text: str
-    voice: Optional[str] = None               # override settings.voice
-    rvc_enabled: Optional[bool] = None        # override settings.rvc_enabled
+    voice: Optional[str] = None
+    rvc_enabled: Optional[bool] = None
     format: Optional[Literal["mp3", "wav"]] = None
 
 
 class PreviewRequest(BaseModel):
-    """Live preview from the Prosody Lab - one ad-hoc emotion, no saving."""
     sample_text: str
     emotion: Emotion
     voice: Optional[str] = None
@@ -75,44 +81,45 @@ class PreviewRequest(BaseModel):
 
 
 class ColorMap(BaseModel):
-    colors: dict[str, str]                    # emotion id -> #hex
+    colors: dict[str, str]
 
 
 # ---- Seed presets ----------------------------------------------------------
+# Emotion comes from PACE + ENERGY + intonation RANGE, with only tiny pitch moves.
+# (range > 1 = livelier/melodic, < 1 = flatter/calmer.)
 
-def _e(name, color, desc, sample, *, rate=0, pitch=0, volume=0,
-       transpose=0, index_rate=0.66, protect=0.33, rms=0.25,
-       default=False, pause=0) -> Emotion:
+def _e(name, color, desc, sample, *, rate=0, volume=0, pitch=0.0, rng=1.0,
+       index_rate=0.66, protect=0.33, rms=0.25, default=False, pause=0) -> Emotion:
     return Emotion(
         id=slugify(name), name=name, color=color, description=desc,
         sample_text=sample, is_default=default, pause_after_ms=pause,
-        tts=TTSParams(rate=rate, pitch=pitch, volume=volume),
-        rvc=RVCParams(transpose=transpose, index_rate=index_rate,
-                      protect=protect, rms_mix_rate=rms),
+        prosody=ProsodyParams(rate=rate, volume=volume, pitch=pitch, range=rng),
+        rvc=RVCParams(index_rate=index_rate, protect=protect, rms_mix_rate=rms),
     )
 
 
 DEFAULT_EMOTIONS: list[Emotion] = [
-    _e("Neutral", "#8b93a7", "Calm, even narration. Used for untagged text.",
+    _e("Neutral", "#8b93a7", "Even, natural narration. Used for untagged text.",
        "This is my normal speaking voice.", default=True),
-    _e("Gleeful", "#ffd166", "Bright, upbeat and smiling.",
+    _e("Gleeful", "#ffd166", "Bright and smiling - livelier melody, a touch quicker.",
        "Hi there, welcome to my channel!",
-       rate=12, pitch=28, volume=6, transpose=1, index_rate=0.7, rms=0.35),
-    _e("Excited", "#ff7b54", "High energy, fast and loud.",
-       "You are NOT going to believe what happened today!",
-       rate=24, pitch=40, volume=12, transpose=2, index_rate=0.72, rms=0.45),
-    _e("Sad", "#5b8def", "Slow, low and downcast.",
+       rate=6, volume=3, pitch=1.0, rng=1.35),
+    _e("Excited", "#ff7b54", "High energy - fast, loud, very animated intonation.",
+       "You are not going to believe what happened today!",
+       rate=16, volume=8, pitch=1.5, rng=1.6),
+    _e("Sad", "#5b8def", "Slow and subdued - flatter, downcast melody.",
        "But today, I have some difficult news to share.",
-       rate=-16, pitch=-30, volume=-6, transpose=-1, index_rate=0.6, rms=0.15),
-    _e("Angry", "#ef476f", "Hard, intense and forceful.",
+       rate=-14, volume=-4, pitch=-1.0, rng=0.6),
+    _e("Angry", "#ef476f", "Hard and forceful - driven by loudness and pace, not pitch.",
        "I have had absolutely enough of this.",
-       rate=8, pitch=-8, volume=14, transpose=0, index_rate=0.75,
-       protect=0.2, rms=0.5),
-    _e("Whisper", "#9b8cff", "Soft, intimate, breathy and quiet.",
-       "Come closer... I want to tell you a secret.",
-       rate=-12, pitch=-6, volume=-40, transpose=0, index_rate=0.5,
-       protect=0.45, rms=0.05),
-    _e("Calm", "#06d6a0", "Relaxed, warm and reassuring.",
+       rate=6, volume=10, pitch=0.0, rng=1.15, protect=0.2),
+    _e("Hushed", "#9b8cff", "Soft and intimate - quiet, gentle, slower.",
+       "Come closer... I want to tell you something.",
+       rate=-8, volume=-32, pitch=0.0, rng=0.8, protect=0.45),
+    _e("Calm", "#06d6a0", "Relaxed and reassuring - gentle, even melody.",
        "Take a deep breath. Everything is going to be alright.",
-       rate=-8, pitch=4, volume=-2, transpose=0, index_rate=0.66, rms=0.2),
+       rate=-6, volume=-2, pitch=0.0, rng=0.85),
+    _e("Curious", "#22d3ee", "Inquisitive lift - a little brighter and more varied.",
+       "Hmm, now that is a really interesting question.",
+       rate=2, volume=1, pitch=0.5, rng=1.3),
 ]

@@ -1,9 +1,12 @@
-"""Orchestration: text -> emotion segments -> Edge-TTS -> (RVC) -> stitched audio.
+"""Orchestration: text -> emotion segments -> Edge-TTS -> (RVC) -> prosody DSP -> audio.
 
-For each parsed segment we synthesize the base voice with that emotion's prosody,
-optionally run it through RVC for voice conversion, normalize to the canonical
-PCM format, and finally stitch all segments (plus per-emotion pauses) into one
-deliverable file.
+Per segment:
+  1. Edge-TTS speaks the text with the emotion's pace + energy.
+  2. (optional) RVC converts it to the user's voice, using a SINGLE global
+     pitch calibration (settings.rvc_transpose) - same for every block.
+  3. Praat DSP applies the emotion's pitch inflection + intonation range,
+     formant-preserving, so it sounds expressive without changing identity.
+Segments (plus per-emotion pauses) are stitched and exported.
 """
 from __future__ import annotations
 
@@ -13,33 +16,45 @@ import time
 import uuid
 from pathlib import Path
 
-from . import audio, config, store
+from . import audio, config, prosody_dsp, store
 from .engines import edge_engine
 from .engines import rvc_engine
 from .models import Emotion, Settings
 from .prosody import Segment, parse_segments
 
-_TTS_CONCURRENCY = 4  # Edge-TTS requests in flight at once
+_TTS_CONCURRENCY = 4
 
 
 async def _tts_segment(seg: Segment, voice: str, run_dir: Path,
                        sem: asyncio.Semaphore) -> Path:
-    """Synthesize one segment's base voice -> canonical wav."""
+    """Edge-TTS base voice (pace + energy) -> canonical wav."""
     mp3 = run_dir / f"seg_{seg.index:03d}.mp3"
     wav = run_dir / f"seg_{seg.index:03d}.wav"
     async with sem:
-        await edge_engine.synth(seg.text, voice, seg.emotion.tts, mp3)
+        await edge_engine.synth(seg.text, voice, seg.emotion.prosody, mp3)
     await asyncio.to_thread(audio.to_canonical_wav, mp3, wav)
     return wav
 
 
-def _rvc_segment(seg: Segment, base_wav: Path, model: str,
+def _rvc_segment(seg: Segment, base_wav: Path, model: str, transpose: int,
                  run_dir: Path, device: str) -> Path:
     """Convert one base wav through RVC, then re-normalize. Runs in a thread."""
     raw = run_dir / f"seg_{seg.index:03d}_rvc_raw.wav"
     out = run_dir / f"seg_{seg.index:03d}_rvc.wav"
-    rvc_engine.convert(model, base_wav, raw, seg.emotion.rvc, device=device)
-    audio.to_canonical_wav(raw, out)  # RVC may emit a different sample rate
+    rvc_engine.convert(model, base_wav, raw, seg.emotion.rvc,
+                       transpose=transpose, device=device)
+    audio.to_canonical_wav(raw, out)
+    return out
+
+
+def _shape_segment(seg: Segment, in_wav: Path, run_dir: Path) -> Path:
+    """Apply formant-preserving pitch + intonation-range DSP. Runs in a thread."""
+    shaped = run_dir / f"seg_{seg.index:03d}_shaped.wav"
+    prosody_dsp.shape(in_wav, shaped,
+                      pitch=seg.emotion.prosody.pitch,
+                      range_scale=seg.emotion.prosody.range)
+    out = run_dir / f"seg_{seg.index:03d}_final.wav"
+    audio.to_canonical_wav(shaped, out)
     return out
 
 
@@ -61,7 +76,6 @@ async def synthesize(text: str, voice: str | None, rvc_enabled: bool | None,
     for raw in {s.tag_raw for s in segments if not s.known and s.tag_raw}:
         warnings.append(f"Unknown emotion '[{raw}]' - used '{default.name}' instead.")
 
-    # Decide whether RVC actually runs this pass.
     rvc_status = rvc_engine.status(settings.active_model)
     rvc_on = bool(want_rvc)
     if rvc_on and not settings.active_model:
@@ -85,20 +99,21 @@ async def synthesize(text: str, voice: str | None, rvc_enabled: bool | None,
             *[_tts_segment(s, voice, run_dir, sem) for s in segments]
         )
 
-        # 2) Assemble: optional RVC per segment + pauses, in order.
+        # 2) Per segment: optional RVC -> prosody DSP -> assemble (in order).
         parts: list[Path] = []
         seg_meta: list[dict] = []
         for seg, base in zip(segments, base_wavs):
-            final = base
+            voiced = base
             if rvc_on:
                 try:
-                    final = await asyncio.to_thread(
+                    voiced = await asyncio.to_thread(
                         _rvc_segment, seg, base, settings.active_model,
-                        run_dir, settings.rvc_device)
+                        settings.rvc_transpose, run_dir, settings.rvc_device)
                 except rvc_engine.RVCUnavailable as e:
                     rvc_on = False
                     warnings.append(f"RVC failed - used base voice. ({e})")
-                    final = base
+                    voiced = base
+            final = await asyncio.to_thread(_shape_segment, seg, voiced, run_dir)
             parts.append(final)
 
             meta = seg.to_public()
@@ -110,7 +125,7 @@ async def synthesize(text: str, voice: str | None, rvc_enabled: bool | None,
                 audio.make_silence(sil, seg.emotion.pause_after_ms)
                 parts.append(sil)
 
-        # 3) Stitch + export to the delivery format.
+        # 3) Stitch + export.
         combined = run_dir / "combined.wav"
         audio.stitch(parts, combined)
         out_name = f"prosody_{time.strftime('%Y%m%d_%H%M%S')}_{run_dir.name}.{fmt}"
@@ -150,19 +165,20 @@ async def preview(sample_text: str, emotion: Emotion, voice: str | None,
         sem = asyncio.Semaphore(1)
         base = await _tts_segment(seg, voice, run_dir, sem)
 
-        final = base
+        voiced = base
         rvc_status = rvc_engine.status(settings.active_model)
         if want_rvc and settings.active_model and rvc_status["installed"] \
                 and rvc_status["active_resolved"]:
             try:
-                final = await asyncio.to_thread(
+                voiced = await asyncio.to_thread(
                     _rvc_segment, seg, base, settings.active_model,
-                    run_dir, settings.rvc_device)
+                    settings.rvc_transpose, run_dir, settings.rvc_device)
             except rvc_engine.RVCUnavailable as e:
                 warnings.append(f"RVC skipped: {e}")
         elif want_rvc:
             warnings.append("RVC not active - previewing base voice.")
 
+        final = await asyncio.to_thread(_shape_segment, seg, voiced, run_dir)
         out_name = f"preview_{run_dir.name}.mp3"
         out_path = config.OUTPUT_DIR / out_name
         audio.export(final, out_path, "mp3")

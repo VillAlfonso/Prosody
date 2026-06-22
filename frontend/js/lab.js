@@ -7,14 +7,14 @@ import { insertTag } from "./editor.js";
 
 // fader id -> { value-output id, format }
 const FADERS = {
-  "f-rate":      { out: "v-rate",      fmt: "pct" },
-  "f-pitch":     { out: "v-pitch",     fmt: "hz"  },
-  "f-volume":    { out: "v-volume",    fmt: "pct" },
-  "f-transpose": { out: "v-transpose", fmt: "semi"},
-  "f-index":     { out: "v-index",     fmt: "num" },
-  "f-protect":   { out: "v-protect",   fmt: "num" },
-  "f-rms":       { out: "v-rms",       fmt: "num" },
-  "f-filter":    { out: "v-filter",    fmt: "int" },
+  "f-rate":    { out: "v-rate",    fmt: "pct"  },
+  "f-volume":  { out: "v-volume",  fmt: "pct"  },
+  "f-pitch":   { out: "v-pitch",   fmt: "semi" },
+  "f-range":   { out: "v-range",   fmt: "mult" },
+  "f-index":   { out: "v-index",   fmt: "num"  },
+  "f-protect": { out: "v-protect", fmt: "num"  },
+  "f-rms":     { out: "v-rms",     fmt: "num"  },
+  "f-filter":  { out: "v-filter",  fmt: "int"  },
 };
 
 const $ = (id) => document.getElementById(id);
@@ -23,8 +23,8 @@ function fmtVal(fmt, v) {
   const n = Number(v);
   switch (fmt) {
     case "pct":  return `${n >= 0 ? "+" : ""}${n}%`;
-    case "hz":   return `${n >= 0 ? "+" : ""}${n}Hz`;
-    case "semi": return `${n} st`;
+    case "semi": return `${n > 0 ? "+" : ""}${n.toFixed(1)} st`;
+    case "mult": return `${n.toFixed(2)}×`;
     case "num":  return n.toFixed(2);
     case "int":  return String(n);
     default:     return String(v);
@@ -52,11 +52,11 @@ function setForm(e) {
   $("lab-sample").value = e.sample_text || "";
   $("lab-pause").value = e.pause_after_ms ?? 0;
   $("lab-default").checked = !!e.is_default;
-  const t = e.tts || {}, r = e.rvc || {};
-  $("f-rate").value = t.rate ?? 0;
-  $("f-pitch").value = t.pitch ?? 0;
-  $("f-volume").value = t.volume ?? 0;
-  $("f-transpose").value = r.transpose ?? 0;
+  const p = e.prosody || {}, r = e.rvc || {};
+  $("f-rate").value = p.rate ?? 0;
+  $("f-volume").value = p.volume ?? 0;
+  $("f-pitch").value = p.pitch ?? 0;
+  $("f-range").value = p.range ?? 1.0;
   $("f-index").value = r.index_rate ?? 0.66;
   $("f-protect").value = r.protect ?? 0.33;
   $("f-rms").value = r.rms_mix_rate ?? 0.25;
@@ -75,13 +75,13 @@ function collectForm() {
     sample_text: $("lab-sample").value,
     pause_after_ms: Math.max(0, parseInt($("lab-pause").value || "0", 10)),
     is_default: $("lab-default").checked,
-    tts: {
+    prosody: {
       rate: +$("f-rate").value,
-      pitch: +$("f-pitch").value,
       volume: +$("f-volume").value,
+      pitch: +$("f-pitch").value,
+      range: +$("f-range").value,
     },
     rvc: {
-      transpose: +$("f-transpose").value,
       index_rate: +$("f-index").value,
       protect: +$("f-protect").value,
       rms_mix_rate: +$("f-rms").value,
@@ -93,7 +93,7 @@ function collectForm() {
 
 const BLANK = {
   name: "", color: "#7c8cff", description: "", sample_text: "",
-  pause_after_ms: 0, is_default: false, tts: {}, rvc: {},
+  pause_after_ms: 0, is_default: false, prosody: {}, rvc: {},
 };
 
 export function loadEmotion(e) {
