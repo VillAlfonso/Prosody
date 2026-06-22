@@ -14,9 +14,9 @@ from fastapi.staticfiles import StaticFiles
 
 from . import config, store
 from .engines import edge_engine, rvc_engine
-from .models import (ColorMap, Emotion, PreviewRequest, Settings, SynthRequest,
-                     slugify)
-from . import pipeline
+from .models import (ColorMap, EditorSynthRequest, Emotion, PreviewRequest,
+                     ReshapeRequest, Settings, SynthRequest, slugify)
+from . import editor, pipeline
 
 app = FastAPI(title="Prosody TTS Studio", version="1.0.0")
 
@@ -228,6 +228,30 @@ async def synthesize(req: SynthRequest):
         raise HTTPException(400, str(e))
     except Exception as e:
         raise HTTPException(500, f"Synthesis failed: {e}")
+
+
+# --------------------------------------------------------------------------- #
+#  Tone Editor (visualize + reshape prosody)
+# --------------------------------------------------------------------------- #
+
+@app.post("/api/editor/synth")
+async def editor_synth(req: EditorSynthRequest):
+    try:
+        return await editor.synth(req)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(500, f"Editor synth failed: {e}")
+
+
+@app.post("/api/editor/reshape")
+async def editor_reshape(req: ReshapeRequest):
+    try:
+        return await editor.reshape(req)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(500, f"Reshape failed: {e}")
 
 
 # --------------------------------------------------------------------------- #

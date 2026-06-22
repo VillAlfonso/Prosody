@@ -37,7 +37,7 @@ data/models/
 data/settings.json
 
 # ─────────────────────────── Dev scratch / artifacts ──────────────────────
-/scripts/ui_shot.png
+/scripts/*.png
 
 # ─────────────────────────────────── OS ───────────────────────────────────
 .DS_Store

@@ -486,3 +486,60 @@ input[type="range"]:focus::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--ac
   .topbar-controls { flex-wrap: wrap; }
   .workspace { padding: 14px; }
 }
+
+/* =====================================================================
+   TONE EDITOR (full-width overlay)
+   ===================================================================== */
+.tone-editor { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center;
+  background: rgba(4,5,8,.66); backdrop-filter: blur(6px); animation: fade .2s ease forwards; }
+.tone-editor[hidden] { display: none; }
+.tone-dialog { width: min(1180px, 94vw); max-height: 92vh; overflow: auto;
+  background: var(--panel); border: 1px solid var(--line-2); border-radius: 18px;
+  box-shadow: var(--shadow); padding: 20px 22px 18px; }
+
+.tone-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.tone-title { display: flex; align-items: center; gap: 13px; }
+.tone-title-mark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px;
+  background: var(--accent-glow); color: var(--accent); font-size: 1.2rem; }
+.tone-title-text h2 { font-family: var(--display); font-size: 1.3rem; line-height: 1.1; }
+.tone-title-text p { font-size: .76rem; color: var(--faint); margin-top: 2px; }
+.tone-close { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line);
+  background: var(--panel-2); color: var(--muted); cursor: pointer; font-size: .9rem; }
+.tone-close:hover { color: var(--text); border-color: var(--line-2); }
+
+.tone-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.tone-text { flex: 1 1 280px; min-width: 220px; }
+.tone-spacer { flex: 1 1 auto; }
+
+.seg-toggle { display: inline-flex; background: var(--panel-3); border: 1px solid var(--line);
+  border-radius: 9px; padding: 2px; gap: 2px; }
+.seg-btn { border: 0; background: transparent; color: var(--muted); font-size: .74rem; font-weight: 600;
+  padding: 6px 12px; border-radius: 7px; cursor: pointer; font-family: inherit; }
+.seg-btn:hover { color: var(--text); }
+.seg-btn.is-active { background: var(--accent); color: var(--accent-ink); }
+
+.tone-canvas-wrap { position: relative; background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--radius); overflow: hidden; }
+#tone-canvas { display: block; width: 100%; }
+.tone-empty { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  color: var(--faint); font-size: .85rem; }
+.tone-spinner { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(11,12,16,.5); }
+.tone-spinner span { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--line-2);
+  border-top-color: var(--accent); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.tone-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px; }
+.tone-hint { font-size: .72rem; color: var(--faint); line-height: 1.45; }
+.tone-hint b { color: var(--muted); font-weight: 700; }
+.tone-msg { font-size: .78rem; color: var(--muted); min-height: 1.1em; text-align: right; white-space: nowrap; }
+.tone-msg.is-ok { color: var(--accent); }
+.tone-msg.is-err { color: var(--danger); }
+#tone-player { display: none; }
+
+.tone-canvas-wrap.is-grab { cursor: grab; }
+.tone-canvas-wrap.is-grabbing { cursor: grabbing; }
+
+@media (max-width: 640px) {
+  .tone-foot { flex-direction: column; align-items: stretch; }
+  .tone-msg { text-align: left; }
+}

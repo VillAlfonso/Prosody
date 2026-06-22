@@ -84,6 +84,9 @@
           <span class="btn-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <span class="btn-text">Generate</span>
         </button>
+        <button id="open-tone" class="btn btn--ghost btn--lg" type="button" title="Visualize & sculpt the delivery">
+          <span class="btn-text">✎ Tone Editor</span>
+        </button>
         <div class="render-info">
           <span id="gen-status" class="gen-status">Ready.</span>
         </div>
@@ -281,6 +284,52 @@
       </div>
     </aside>
   </main>
+
+  <!-- ====================== TONE EDITOR (overlay) ====================== -->
+  <div class="tone-editor" id="tone-editor" hidden>
+    <div class="tone-dialog" role="dialog" aria-label="Tone Editor" aria-modal="true">
+      <header class="tone-head">
+        <div class="tone-title">
+          <span class="tone-title-mark" aria-hidden="true">✎</span>
+          <div class="tone-title-text">
+            <h2>Tone Editor</h2>
+            <p>See the waves · sculpt the delivery · the voice follows</p>
+          </div>
+        </div>
+        <button class="tone-close" id="tone-close" type="button" aria-label="Close">✕</button>
+      </header>
+
+      <div class="tone-toolbar">
+        <input id="tone-text" class="input tone-text" type="text"
+          placeholder="Type a line to shape, then Synthesize…" />
+        <button id="tone-synth" class="btn btn--primary btn--sm" type="button">Synthesize</button>
+        <div class="seg-toggle" id="tone-gran" role="group" aria-label="Granularity">
+          <button class="seg-btn is-active" data-gran="word" type="button">Word</button>
+          <button class="seg-btn" data-gran="syllable" type="button">Syllable</button>
+          <button class="seg-btn" data-gran="letter" type="button">Letter</button>
+        </div>
+        <span class="tone-spacer"></span>
+        <button id="tone-play" class="btn btn--ghost btn--sm" type="button" disabled>▶ Play</button>
+        <button id="tone-reset" class="btn btn--ghost btn--sm" type="button" disabled>Reset</button>
+        <button id="tone-render" class="btn btn--primary btn--sm" type="button" disabled>Re-render ▶</button>
+        <a id="tone-download" class="btn btn--ghost btn--sm" download href="#" hidden>Download</a>
+      </div>
+
+      <div class="tone-canvas-wrap" id="tone-canvas-wrap">
+        <canvas id="tone-canvas"></canvas>
+        <div class="tone-empty" id="tone-empty">Synthesize a line to see its waves and tone.</div>
+        <div class="tone-spinner" id="tone-spinner" hidden><span></span></div>
+      </div>
+
+      <div class="tone-foot">
+        <p class="tone-hint">Drag the <b>tone</b> line to reshape intonation · drag the
+          <b>loudness</b> band for emphasis · drag a <b>pacing</b> block's edge to stretch
+          a word. Same voice — formant-safe.</p>
+        <p class="tone-msg" id="tone-msg"></p>
+      </div>
+      <audio id="tone-player" preload="metadata"></audio>
+    </div>
+  </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

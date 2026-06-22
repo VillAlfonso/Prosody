@@ -57,6 +57,43 @@ async def synth(text: str, voice: str, prosody: ProsodyParams,
     return out_mp3
 
 
+async def synth_with_marks(text: str, voice: str, prosody: ProsodyParams,
+                           out_mp3: str | Path) -> list[dict]:
+    """Like synth(), but also return exact per-word timings for the Tone Editor.
+
+    Requesting `boundary="WordBoundary"` makes the service report each word's
+    offset + duration (100ns ticks) in the SAME timeline as the audio we save,
+    so the marks line up with the rendered wav. Returns [{text, t0, t1}] seconds.
+    """
+    out_mp3 = Path(out_mp3)
+    communicate = edge_tts.Communicate(
+        text,
+        voice,
+        rate=_signed_pct(prosody.rate),
+        volume=_signed_pct(prosody.volume),
+        pitch="+0Hz",
+        boundary="WordBoundary",
+    )
+    words: list[dict] = []
+    with open(out_mp3, "wb") as f:
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                f.write(chunk["data"])
+            elif chunk["type"] == "WordBoundary":
+                t0 = chunk["offset"] / 1e7
+                words.append({
+                    "text": chunk["text"],
+                    "t0": t0,
+                    "t1": t0 + chunk["duration"] / 1e7,
+                })
+    if not out_mp3.exists() or out_mp3.stat().st_size == 0:
+        raise RuntimeError(
+            "Edge-TTS produced no audio. Check your internet connection and "
+            "that the selected voice is valid (Edge-TTS is an online service)."
+        )
+    return words
+
+
 async def list_voices() -> list[dict]:
     """Return available voices, featured ones first. Cached after first call."""
     global _voice_cache

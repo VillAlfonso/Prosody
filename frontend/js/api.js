@@ -30,6 +30,9 @@ export const api = {
   preview:      (p)       => request("POST", "/api/preview", p),
   synthesize:   (p)       => request("POST", "/api/synthesize", p),
 
+  editorSynth:  (p)       => request("POST", "/api/editor/synth", p),
+  editorReshape:(p)       => request("POST", "/api/editor/reshape", p),
+
   getSettings:  ()        => request("GET",  "/api/settings"),
   saveSettings: (patch)   => request("POST", "/api/settings", patch),
 

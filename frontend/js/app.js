@@ -6,6 +6,7 @@ import { state, emit, on } from "./state.js";
 import { initEditor, getText } from "./editor.js";
 import { initLab, updateRvcBadge } from "./lab.js";
 import { initModelsTab, renderModels } from "./models.js";
+import { initToneEditor } from "./tone.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -155,6 +156,7 @@ async function boot() {
   initLab();
   initModelsTab(featured);
   initPlayer();
+  initToneEditor();
   $("generate-btn").addEventListener("click", generate);
 
   // Re-render the models view if RVC status changed during init.

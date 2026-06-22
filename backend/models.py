@@ -84,6 +84,36 @@ class ColorMap(BaseModel):
     colors: dict[str, str]
 
 
+# ---- Tone Editor payloads --------------------------------------------------
+
+class EditorSynthRequest(BaseModel):
+    """Synthesize one line into an editable clip."""
+    text: str
+    voice: Optional[str] = None
+    rvc_enabled: Optional[bool] = None
+    emotion_id: Optional[str] = None   # start delivery from a saved emotion
+
+
+class PitchPoint(BaseModel):
+    t: float                            # seconds
+    hz: float                           # absolute target frequency
+
+
+class RegionEdit(BaseModel):
+    """A time span carrying one value: gain in dB (energy) or a scale (timing)."""
+    t0: float
+    t1: float
+    value: float
+
+
+class ReshapeRequest(BaseModel):
+    """The user's full edited curves. Absolute targets => non-compounding."""
+    clip_id: str
+    pitch_points: Optional[list[PitchPoint]] = None     # melody (intonation)
+    energy_segments: Optional[list[RegionEdit]] = None  # loudness, gain_db
+    time_segments: Optional[list[RegionEdit]] = None    # pacing, scale 0.5-2.0
+
+
 # ---- Seed presets ----------------------------------------------------------
 # Emotion comes from PACE + ENERGY + intonation RANGE, with only tiny pitch moves.
 # (range > 1 = livelier/melodic, < 1 = flatter/calmer.)
